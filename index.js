@@ -1,18 +1,31 @@
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const express = require("express");
+const expressjwt = require("express-jwt");
 const jwt = require("jsonwebtoken");
 
 const app = express();
 const port = process.env.port || 3000;
+
+const secret = "mysupersecret";
 const users = [{ id: 1, username: "admin", password: "admin" }];
 
 app.use(bodyParser.json());
 
+const jwtCheck = expressjwt({ secret });
+
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send("Main endpoint, public.");
+  res.status(200).send("main");
+});
+
+app.get("/resource", (req, res) => {
+  res.status(200).send("Public resource");
+});
+
+app.get("/resource/secret", jwtCheck, (req, res) => {
+  res.status(200).send("Secret rsource, you should be logged in to see this.");
 });
 
 app.post("/login", (req, res) => {
@@ -34,7 +47,7 @@ app.post("/login", (req, res) => {
       sub: user.id,
       username: user.username
     },
-    "mysupersecret",
+    secret,
     { expiresIn: "3 hours" }
   );
 
